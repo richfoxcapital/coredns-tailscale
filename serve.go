@@ -64,7 +64,13 @@ func (t *Tailscale) resolveAAAA(domainName string, msg *dns.Msg) {
 
 func (t *Tailscale) resolveCNAME(domainName string, msg *dns.Msg, lookupType int) {
 
-	name := strings.Split(domainName, ".")[0]
+	parts := strings.Split(strings.TrimSuffix(domainName, "."), ".")
+	for i, part := range parts {
+		println(i, part)
+	}
+	name := strings.Join(parts[:len(parts)-2], ".")
+	println(name)
+	log.Debug("Looking up CNAME for: ", name)
 	targets, ok := t.entries[name]["CNAME"]
 	if ok {
 		log.Debugf("Found a CNAME entry after lookup for: %s", name)
@@ -85,7 +91,7 @@ func (t *Tailscale) resolveCNAME(domainName string, msg *dns.Msg, lookupType int
 			}
 		}
 	}
-
+	log.Debug("CNAME entry not found")
 }
 
 func (t *Tailscale) handleNoRecords(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, msg *dns.Msg) (int, error) {

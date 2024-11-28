@@ -30,8 +30,15 @@ func newTS() Tailscale {
 				"A":    []string{"127.0.0.1"},
 				"AAAA": []string{"::1"},
 			},
+			"dev-test3": {
+				"A":    []string{"127.0.0.1"},
+				"AAAA": []string{"::1"},
+			},
 			"test2": {
 				"CNAME": []string{"test2-1.example.com", "test2-2.example.com"},
+			},
+			"test3.dev": {
+				"CNAME": []string{"dev-test3.example.com"},
 			},
 		},
 	}
@@ -193,6 +200,41 @@ func TestResolveCNAME(t *testing.T) {
 	testEquals(t, "A record", []string{"127.0.0.1", "127.0.0.1"}, as)
 	testEquals(t, "AAAA record", []string{"::1", "::1"}, aaaas)
 
+}
+
+func TestResolveDevCNAME(t *testing.T) {
+	ts := newTS()
+	msg := dns.Msg{}
+	domain := "test3.dev.example.com."
+
+	ts.resolveCNAME(domain, &msg, TypeAll)
+
+	testEquals(t, "answer count", 3, len(msg.Answer))
+
+	var cnames []string
+	var as []string
+	var aaaas []string
+	for _, rr := range msg.Answer {
+
+		switch rec := rr.(type) {
+
+		case *dns.CNAME:
+			cnames = append(cnames, rec.Target)
+
+		case *dns.A:
+			as = append(as, rec.A.String())
+
+		case *dns.AAAA:
+			aaaas = append(aaaas, rec.AAAA.String())
+		}
+
+	}
+
+	sort.Strings(cnames)
+	sort.Strings(as)
+	testEquals(t, "CNAME record", []string{"dev-test3.example.com"}, cnames)
+	testEquals(t, "A record", []string{"127.0.0.1"}, as)
+	testEquals(t, "AAAA record", []string{"::1"}, aaaas)
 }
 
 func TestResolveAIsCNAME(t *testing.T) {

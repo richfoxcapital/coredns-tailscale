@@ -142,7 +142,32 @@ func (t *Tailscale) processNetMap(nm *netmap.NetworkMap) {
 			}
 		}
 
+		// Process hostnames that start with dev- or prod-
+		if strings.HasPrefix(hostname, "dev-") || strings.HasPrefix(hostname, "prod-") {
+			if parts := strings.SplitN(hostname, "-", 2); len(parts) == 2 {
+				cname := fmt.Sprintf("%s.%s", parts[1], parts[0])
+				if _, ok := entries[cname]; !ok {
+					entries[cname] = map[string][]string{}
+				}
+				entries[cname]["CNAME"] = append(entries[cname]["CNAME"], fmt.Sprintf("%s.%s.", hostname, t.zone))
+				log.Debugf("Added CNAME entry for %s: %s.%s", cname, hostname, t.zone)
+			}
+		}
+
+		// prod-test.example.com -> test.example.com
+		if strings.HasPrefix(hostname, "prod-") {
+			if parts := strings.SplitN(hostname, "-", 2); len(parts) == 2 {
+				cname := parts[1]
+				if _, ok := entries[cname]; !ok {
+					entries[cname] = map[string][]string{}
+				}
+				entries[cname]["CNAME"] = append(entries[cname]["CNAME"], fmt.Sprintf("%s.%s.", hostname, t.zone))
+				log.Debugf("Added CNAME entry for %s: %s.%s", cname, hostname, t.zone)
+			}
+		}
+
 		entries[hostname] = entry
+		log.Debugf("Added entry for %s: %v", hostname, entry)
 	}
 
 	t.mu.Lock()
