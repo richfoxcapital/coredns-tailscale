@@ -52,6 +52,20 @@ func TestProcessNetMap(t *testing.T) {
 				},
 				Tags: []string{"tag:cname-app"},
 			}).View(),
+			(&tailcfg.Node{
+				ComputedName: "dev-test-app",
+				Addresses: []netip.Prefix{
+					netip.MustParsePrefix("100.0.0.5/24"),
+					netip.MustParsePrefix("fd7a:115c:a1e0::5/128"),
+				},
+			}).View(),
+			(&tailcfg.Node{
+				ComputedName: "prod-test-app",
+				Addresses: []netip.Prefix{
+					netip.MustParsePrefix("100.0.0.6/24"),
+					netip.MustParsePrefix("fd7a:115c:a1e0::6/128"),
+				},
+			}).View(),
 		},
 	}
 
@@ -66,6 +80,23 @@ func TestProcessNetMap(t *testing.T) {
 		},
 		"app": {
 			"CNAME": {"self.example.com.", "peer.example.com."},
+		},
+		"dev-test-app": {
+			"A":    {"100.0.0.5"},
+			"AAAA": {"fd7a:115c:a1e0::5"},
+		},
+		"test-app.dev": {
+			"CNAME": {"dev-test-app.example.com."},
+		},
+		"prod-test-app": {
+			"A":    {"100.0.0.6"},
+			"AAAA": {"fd7a:115c:a1e0::6"},
+		},
+		"test-app.prod": {
+			"CNAME": {"prod-test-app.example.com."},
+		},
+		"test-app": {
+			"CNAME": {"prod-test-app.example.com."},
 		},
 	}
 
