@@ -134,10 +134,21 @@ func (t *Tailscale) processNetMap(nm *netmap.NetworkMap) {
 		if node.Tags().Len() > 0 {
 			for _, raw := range node.Tags().AsSlice() {
 				if tag, ok := strings.CutPrefix(raw, "tag:cname-"); ok {
-					if _, ok := entries[tag]; !ok {
-						entries[tag] = map[string][]string{}
+					parts := strings.Split(tag, "-")
+					if len(parts) == 2 && (parts[0] == "dev" || parts[0] == "prod") {
+						// Handle cname-dev-app or cname-prod-app style tags
+						envCname := fmt.Sprintf("%s.%s", parts[1], parts[0])
+						if _, ok := entries[envCname]; !ok {
+							entries[envCname] = map[string][]string{}
+						}
+						entries[envCname]["CNAME"] = append(entries[envCname]["CNAME"], fmt.Sprintf("%s.%s.", hostname, t.zone))
+					} else if len(parts) == 1 {
+						// Handle regular cname tags
+						if _, ok := entries[tag]; !ok {
+							entries[tag] = map[string][]string{}
+						}
+						entries[tag]["CNAME"] = append(entries[tag]["CNAME"], fmt.Sprintf("%s.%s.", hostname, t.zone))
 					}
-					entries[tag]["CNAME"] = append(entries[tag]["CNAME"], fmt.Sprintf("%s.%s.", hostname, t.zone))
 				}
 			}
 		}

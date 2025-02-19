@@ -18,7 +18,7 @@ func TestProcessNetMap(t *testing.T) {
 			netip.MustParsePrefix("100.0.0.1/24"),
 			netip.MustParsePrefix("fd7a:115c:a1e0::1/128"),
 		},
-		Tags: []string{"tag:cname-app"},
+		Tags: []string{"tag:cname-app", "tag:cname-dev-app", "tag:cname-prod-app"},
 	}).View()
 
 	nm := &netmap.NetworkMap{
@@ -30,7 +30,7 @@ func TestProcessNetMap(t *testing.T) {
 					netip.MustParsePrefix("100.0.0.2/24"),
 					netip.MustParsePrefix("fd7a:115c:a1e0::2/128"),
 				},
-				Tags: []string{"tag:cname-app"},
+				Tags: []string{"tag:cname-app", "tag:cname-dev-app", "tag:cname-prod-app"},
 			}).View(),
 			(&tailcfg.Node{
 				// shared node should be excluded
@@ -40,7 +40,7 @@ func TestProcessNetMap(t *testing.T) {
 					netip.MustParsePrefix("100.0.0.3/24"),
 					netip.MustParsePrefix("fd7a:115c:a1e0::3/128"),
 				},
-				Tags: []string{"tag:cname-app"},
+				Tags: []string{"tag:cname-app", "tag:cname-dev-app", "tag:cname-prod-app"},
 			}).View(),
 			(&tailcfg.Node{
 				// mullvad exit node should be excluded
@@ -81,6 +81,12 @@ func TestProcessNetMap(t *testing.T) {
 		"app": {
 			"CNAME": {"self.example.com.", "peer.example.com."},
 		},
+		"app.dev": {
+			"CNAME": {"self.example.com.", "peer.example.com."},
+		},
+		"app.prod": {
+			"CNAME": {"self.example.com.", "peer.example.com."},
+		},
 		"dev-test-app": {
 			"A":    {"100.0.0.5"},
 			"AAAA": {"fd7a:115c:a1e0::5"},
@@ -113,6 +119,12 @@ func TestProcessNetMap(t *testing.T) {
 			"AAAA": {"fd7a:115c:a1e0::1"},
 		},
 		"app": {
+			"CNAME": {"self.example.com."},
+		},
+		"app.dev": {
+			"CNAME": {"self.example.com."},
+		},
+		"app.prod": {
 			"CNAME": {"self.example.com."},
 		},
 	}
